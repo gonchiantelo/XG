@@ -1,13 +1,3 @@
-/* =============================================
-   XPENSES GAME — Supabase Repository Layer
-   Implements OAuth2 (Google/Apple) + async CRUD
-   respecting RLS policies per user/group.
-
-   SETUP: Replace the two constants below with
-   your actual Supabase project credentials.
-   ============================================= */
-'use strict';
-
 // ─────────────────────────────────────────────
 // CONFIG  ← replace with your project values
 // ─────────────────────────────────────────────
@@ -91,7 +81,7 @@ const AuthRepo = {
       }
     });
     if (error) throw error;
-    return data.user;
+    return data;
   },
 
   /** Sign out current session. */
@@ -210,7 +200,11 @@ const GroupsRepo = {
       .single();
     if (error) throw error;
     // Auto-add owner as member
-    await sb.from('group_members').insert({ group_id: group.id, user_id: ownerId, role: 'owner' });
+    const { error: gmError } = await sb.from('group_members').insert({ group_id: group.id, user_id: ownerId, role: 'owner' });
+    if (gmError) {
+      console.error('[GroupsRepo] group_members insert error:', gmError);
+      throw gmError;
+    }
     return group;
   },
 
